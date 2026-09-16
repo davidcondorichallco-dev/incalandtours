@@ -14,6 +14,9 @@ Route::get('/reservar', [TourismController::class, 'onlineForm'])->name('tourist
 Route::post('/reservas', [TourismController::class, 'storeTourist'])->name('reservations.store');
 Route::middleware(['staff', 'no.history'])->group(function () {
     Route::get('/panel', [TourismController::class, 'dashboard'])->name('dashboard');
+    Route::put('/perfil', [AuthController::class, 'updateProfile'])->middleware('admin')->name('profile.update');
+    Route::get('/documentacion-api', fn () => response(view('api-docs'))->header('X-Robots-Tag', 'noindex, nofollow'))
+        ->middleware('admin')->name('api.docs');
     Route::put('/reservas/{id}/completar', [TourismController::class, 'completeReservation'])->whereNumber('id')->name('reservations.complete');
     Route::put('/salidas/{id}/cerrar', [TourismController::class, 'closeDeparture'])->whereNumber('id')->middleware('admin')->name('departures.close');
     Route::post('/catalogo/{type}', [TourismController::class, 'storeResource'])->whereIn('type', ['branches','categories','packages','equipment','lodgings','employees','slides'])->middleware('admin')->name('resources.store');

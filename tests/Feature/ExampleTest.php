@@ -6,6 +6,7 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
@@ -142,6 +143,57 @@ class ExampleTest extends TestCase
 
         $this->post('/ingresar', ['email'=>'daniel@incaland.bo', 'password'=>'daniel1234'])
             ->assertRedirect('/panel');
+    }
+
+    public function test_admin_can_update_profile_and_login_with_username(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $session = ['staff_id'=>1,'staff_role'=>'admin','staff_branch_id'=>1];
+
+        $this->withSession($session)->putJson('/perfil', [
+            'full_name'=>'Administradora Incaland',
+            'username'=>'admin.incaland',
+            'email'=>'admin@incaland.bo',
+            'current_password'=>'maria1234',
+            'password'=>'NuevaClave2026',
+            'password_confirmation'=>'NuevaClave2026',
+        ])->assertOk()->assertJsonPath('ok', true);
+
+        $staff = \Illuminate\Support\Facades\DB::table('employees')->where('id', 1)->first();
+        $this->assertSame('admin.incaland', $staff->username);
+        $this->assertSame('admin@incaland.bo', $staff->email);
+        $this->assertTrue(Hash::check('NuevaClave2026', $staff->password));
+
+        $this->post('/salir');
+        $this->post('/ingresar', ['email'=>'admin.incaland', 'password'=>'NuevaClave2026'])
+            ->assertRedirect('/panel');
+    }
+
+    public function test_profile_requires_current_password_and_api_docs_are_admin_only(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $admin = ['staff_id'=>1,'staff_role'=>'admin','staff_branch_id'=>1];
+        $reception = ['staff_id'=>2,'staff_role'=>'receptionist','staff_branch_id'=>1];
+
+        $this->withSession($admin)->putJson('/perfil', [
+            'full_name'=>'María Flores','username'=>'maria','email'=>'otro@incaland.bo',
+            'current_password'=>'incorrecta','password'=>'','password_confirmation'=>'',
+        ])->assertUnprocessable()->assertJsonValidationErrors('current_password');
+
+        $this->get('/documentacion-api')->assertRedirect('/ingresar');
+        $this->withSession($reception)->get('/documentacion-api')->assertForbidden();
+        $this->withSession($admin)->get('/documentacion-api')->assertOk()->assertSee('API REST', false);
+    }
+
+    public function test_login_and_traveler_forms_show_home_link_without_demo_credentials(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $this->get('/ingresar')->assertOk()
+            ->assertSee('Volver al inicio', false)
+            ->assertDontSee('Acceso de demostración', false)
+            ->assertDontSee('maria1234', false);
+        $this->get('/reservar')->assertOk()->assertSee('Volver al inicio', false);
     }
 
     public function test_session_pages_are_not_cached_and_logged_out_staff_cannot_return_to_the_panel(): void

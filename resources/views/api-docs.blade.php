@@ -2,7 +2,7 @@
 $base = url('/api/v1');
 $groups = [
     'Autenticación' => [
-        ['POST','/auth/login','Iniciar sesión','Público','Devuelve un token Bearer válido durante 30 días.','{"email":"maria@incaland.bo","password":"maria1234","device_name":"Flutter Android"}'],
+        ['POST','/auth/login','Iniciar sesión','Público','Devuelve un token Bearer válido durante 30 días.','{"email":"admin@tu-dominio.com","password":"TU_PASSWORD","device_name":"Flutter Android"}'],
         ['GET','/auth/me','Usuario actual','Token','Devuelve el empleado, rol y sucursal asociados al token.',null],
         ['POST','/auth/logout','Cerrar sesión','Token','Revoca solamente el token enviado en esta solicitud.',null],
     ],
@@ -49,6 +49,7 @@ $groups = [
 <body>
 <header class="hero">
     <div class="brand">INCALAND TOURS · BACKEND</div>
+    <a href="{{ route('dashboard') }}#profile" style="display:inline-flex;margin-top:18px;color:#fff;text-decoration:none;font-size:13px;font-weight:700">← Volver al panel</a>
     <h1>API REST </h1>
     <p>Referencia completa de autenticación, home, carrusel, imágenes, reservas, códigos QR, operaciones, salidas y administración del catálogo.</p>
     <div class="base"><span id="baseUrl">{{ $base }}</span><button onclick="copyText(document.getElementById('baseUrl').textContent,this)">Copiar</button></div>
@@ -94,8 +95,8 @@ $groups = [
             <div class="code-wrap"><button class="copy" onclick="copyText(this.nextElementSibling.textContent,this)">Copiar</button><pre><code>final response = await dio.post(
   '{{ $base }}/auth/login',
   data: {
-    'email': 'maria@incaland.bo',
-    'password': 'maria1234',
+    'email': 'admin@tu-dominio.com',
+    'password': 'TU_PASSWORD',
     'device_name': 'Flutter Android',
   },
 );

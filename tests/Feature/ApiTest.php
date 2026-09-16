@@ -13,16 +13,21 @@ class ApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_visual_documentation_is_available_only_by_its_direct_url(): void
+    public function test_visual_documentation_is_available_only_to_an_admin(): void
     {
-        $this->get('/api/documentacion')
+        $this->seed(DatabaseSeeder::class);
+
+        $this->get('/documentacion-api')->assertRedirect('/ingresar');
+        $this->withSession(['staff_id'=>2,'staff_role'=>'receptionist','staff_branch_id'=>1])
+            ->get('/documentacion-api')->assertForbidden();
+        $this->withSession(['staff_id'=>1,'staff_role'=>'admin','staff_branch_id'=>1])
+            ->get('/documentacion-api')
             ->assertOk()
             ->assertHeader('X-Robots-Tag', 'noindex, nofollow')
             ->assertSee('API REST', false)
             ->assertSee('/public/reservations/qr/{token}', false);
 
-        $this->get('/')->assertDontSee('/api/documentacion', false);
-        $this->get('/ingresar')->assertDontSee('/api/documentacion', false);
+        $this->get('/api/documentacion')->assertNotFound();
     }
 
     public function test_public_api_exposes_catalog_and_accepts_qr_and_online_reservations(): void

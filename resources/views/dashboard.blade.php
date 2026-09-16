@@ -33,6 +33,8 @@
         <p>ADMINISTRACIÓN</p>
         <a href="#branches" data-view="branches"><i data-icon="store"></i>Sucursales</a>
         <a href="#team" data-view="team"><i data-icon="badge"></i>Personal</a>
+        <a href="#profile" data-view="profile"><i data-icon="user"></i>Mi perfil</a>
+        <a href="{{ route('api.docs') }}" target="_blank" rel="noopener"><i data-icon="book"></i>Documentación API <span class="external-mark">↗</span></a>
         @endif
     </nav>
     <div class="sidebar-foot">
@@ -48,7 +50,7 @@
         <div class="top-actions">
             <a class="public-link" href="{{ route('tourist.online') }}" target="_blank">Reserva online ↗</a>
             <button class="icon-btn notification" aria-label="Notificaciones"><i data-icon="bell"></i><span></span></button>
-            <button class="profile-chip" data-jump="{{ $staff->role === 'admin' ? 'team' : 'reception' }}"><span>{{ collect(explode(' ', $staff->full_name))->map(fn($n)=>mb_substr($n,0,1))->take(2)->join('') }}</span><div><strong>{{ $staff->full_name }}</strong><small>{{ $staff->role === 'admin' ? 'Admin' : 'Recepción' }}</small></div><b>›</b></button>
+            <button class="profile-chip" data-jump="{{ $staff->role === 'admin' ? 'profile' : 'reception' }}"><span>{{ collect(explode(' ', $staff->full_name))->map(fn($n)=>mb_substr($n,0,1))->take(2)->join('') }}</span><div><strong>{{ $staff->full_name }}</strong><small>{{ $staff->role === 'admin' ? 'Admin' : 'Recepción' }}</small></div><b>›</b></button>
         </div>
     </header>
 
@@ -164,6 +166,30 @@
         <section class="view" id="view-team">
             <div class="section-head"><div><p class="eyebrow">EQUIPO</p><h2>Personal</h2><p>Recepcionistas asignados a cada sucursal.</p></div><button class="primary" data-new="employees">+ Nuevo empleado</button></div>
             <div class="table-card"><table><thead><tr><th>Empleado</th><th>Rol</th><th>Sucursal</th><th>Contacto</th><th>Estado</th><th></th></tr></thead><tbody>@foreach($employees as $e)<tr><td><span class="person-cell"><i>{{ mb_substr($e->full_name,0,1) }}</i><span><strong>{{ $e->full_name }}</strong><small>{{ $e->email }}</small></span></span></td><td>{{ $e->role === 'admin' ? 'Administración' : 'Recepción' }}</td><td>{{ $branches->firstWhere('id',$e->branch_id)->name ?? '—' }}</td><td>{{ $e->phone }}</td><td><em class="status green">Activo</em></td><td><button class="row-action" data-edit="employees" data-id="{{ $e->id }}">Editar</button></td></tr>@endforeach</tbody></table></div>
+        </section>
+
+        <section class="view" id="view-profile">
+            <div class="section-head"><div><p class="eyebrow">CUENTA DE ADMINISTRACIÓN</p><h2>Mi perfil</h2><p>Actualiza tus datos de acceso. Para guardar cualquier cambio debes confirmar tu contraseña actual.</p></div><a class="primary api-doc-button" href="{{ route('api.docs') }}" target="_blank" rel="noopener"><i data-icon="book"></i> Ver documentación API ↗</a></div>
+            <div class="profile-layout">
+                <form id="profileForm" class="profile-card">
+                    <div class="profile-card-head"><span class="avatar large">{{ collect(explode(' ', $staff->full_name))->map(fn($n)=>mb_substr($n,0,1))->take(2)->join('') }}</span><div><h3>Datos de la cuenta</h3><p>Estos datos se usarán en tu próximo inicio de sesión.</p></div></div>
+                    <div class="form-grid">
+                        <label class="span-2">Nombre completo<input name="full_name" value="{{ $staff->full_name }}" maxlength="150" required autocomplete="name"></label>
+                        <label>Nombre de usuario<input name="username" value="{{ $staff->username }}" minlength="3" maxlength="60" pattern="[A-Za-z0-9._-]+" required autocomplete="username"></label>
+                        <label>Correo electrónico<input name="email" type="email" value="{{ $staff->email }}" maxlength="150" required autocomplete="email"></label>
+                    </div>
+                    <div class="profile-passwords">
+                        <div><h3>Seguridad</h3><p>Deja la nueva contraseña vacía si no deseas cambiarla.</p></div>
+                        <div class="form-grid">
+                            <label class="span-2">Contraseña actual<input name="current_password" type="password" required autocomplete="current-password"></label>
+                            <label>Nueva contraseña<input name="password" type="password" minlength="8" autocomplete="new-password"></label>
+                            <label>Confirmar nueva contraseña<input name="password_confirmation" type="password" minlength="8" autocomplete="new-password"></label>
+                        </div>
+                    </div>
+                    <button class="primary" type="submit" data-profile-submit>Guardar cambios</button>
+                </form>
+                <aside class="security-note"><i data-icon="lock"></i><h3>Protección de la cuenta</h3><p>Si cambias la contraseña, se cerrarán los accesos API anteriores para proteger la cuenta.</p><span>Usa al menos 8 caracteres y evita reutilizar contraseñas.</span></aside>
+            </div>
         </section>
         @endif
     </div>

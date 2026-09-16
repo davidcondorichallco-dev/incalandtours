@@ -18,9 +18,9 @@ class DatabaseSeeder extends Seeder
             ['id'=>3,'name'=>'Santa Cruz Norte','city'=>'Santa Cruz','address'=>'Av. Banzer km 3','phone'=>'+591 3 344 9080','qr_token'=>Str::uuid(),'active'=>true,'created_at'=>$now,'updated_at'=>$now],
         ]);
         DB::table('employees')->insert([
-            ['branch_id'=>1,'full_name'=>'María Flores','email'=>'maria@incaland.bo','password'=>Hash::make('maria1234'),'phone'=>'+591 720 11220','role'=>'admin','active'=>true,'created_at'=>$now,'updated_at'=>$now],
-            ['branch_id'=>1,'full_name'=>'Daniel Choque','email'=>'daniel@incaland.bo','password'=>Hash::make('daniel1234'),'phone'=>'+591 701 88430','role'=>'receptionist','active'=>true,'created_at'=>$now,'updated_at'=>$now],
-            ['branch_id'=>2,'full_name'=>'Camila Quispe','email'=>'camila@incaland.bo','password'=>Hash::make('camila1234'),'phone'=>'+591 712 33421','role'=>'receptionist','active'=>true,'created_at'=>$now,'updated_at'=>$now],
+            ['branch_id'=>1,'full_name'=>'María Flores','username'=>'maria','email'=>'maria@incaland.bo','password'=>Hash::make('maria1234'),'phone'=>'+591 720 11220','role'=>'admin','active'=>true,'created_at'=>$now,'updated_at'=>$now],
+            ['branch_id'=>1,'full_name'=>'Daniel Choque','username'=>'daniel','email'=>'daniel@incaland.bo','password'=>Hash::make('daniel1234'),'phone'=>'+591 701 88430','role'=>'receptionist','active'=>true,'created_at'=>$now,'updated_at'=>$now],
+            ['branch_id'=>2,'full_name'=>'Camila Quispe','username'=>'camila','email'=>'camila@incaland.bo','password'=>Hash::make('camila1234'),'phone'=>'+591 712 33421','role'=>'receptionist','active'=>true,'created_at'=>$now,'updated_at'=>$now],
         ]);
         DB::table('tour_categories')->insert([
             ['id'=>1,'name'=>'Naturaleza','color'=>'#F0B90B','created_at'=>$now,'updated_at'=>$now],

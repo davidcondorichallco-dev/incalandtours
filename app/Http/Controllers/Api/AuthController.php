@@ -15,7 +15,7 @@ class AuthController extends Controller
     public function login(Request $request, LoginAttemptGuard $guard)
     {
         $credentials = $request->validate([
-            'email'=>'required|email',
+            'email'=>'required|string|max:150',
             'password'=>'required|string',
             'device_name'=>'nullable|string|max:100',
         ]);
@@ -30,7 +30,14 @@ class AuthController extends Controller
             ], 429)->header('Retry-After', (string) $status['retry_after']);
         }
 
-        $staff = DB::table('employees')->where('email', $credentials['email'])->where('active', true)->first();
+        $identifier = mb_strtolower(trim($credentials['email']));
+        $staff = DB::table('employees')
+            ->where('active', true)
+            ->where(function ($query) use ($identifier) {
+                $query->whereRaw('LOWER(email) = ?', [$identifier])
+                    ->orWhereRaw('LOWER(username) = ?', [$identifier]);
+            })
+            ->first();
 
         if (!$staff || !Hash::check($credentials['password'], $staff->password)) {
             $failure = $guard->failed($credentials['email'], $ip);
@@ -90,6 +97,7 @@ class AuthController extends Controller
         return [
             'id'=>$staff->id,
             'full_name'=>$staff->full_name,
+            'username'=>$staff->username,
             'email'=>$staff->email,
             'phone'=>$staff->phone,
             'role'=>$staff->role,

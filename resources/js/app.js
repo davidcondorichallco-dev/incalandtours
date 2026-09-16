@@ -17,6 +17,8 @@ const icons = {
   qr:'<rect x="3" y="3" width="6" height="6"/><rect x="15" y="3" width="6" height="6"/><rect x="3" y="15" width="6" height="6"/><path d="M15 15h2v2h-2zM19 15h2v6h-6v-2M11 3v4M11 11h4M7 11v2M11 17v4"/>',
   lock:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>'
   ,image:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/>'
+  ,user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'
+  ,book:'<path d="M4 4h6a3 3 0 0 1 3 3v13a3 3 0 0 0-3-3H4z"/><path d="M20 4h-6a3 3 0 0 0-3 3v13a3 3 0 0 1 3-3h6z"/>'
 };
 document.querySelectorAll('[data-icon]').forEach(el=>{ el.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true">${icons[el.dataset.icon]||icons.grid}</svg>`; });
 
@@ -52,7 +54,7 @@ const api=async(url,method,data)=>{
 
 // Dashboard navigation
 const staffFirstName=window.Incaland?.staff?.full_name?.split(' ')[0]||'Equipo';
-const titles={dashboard:['CENTRO DE OPERACIONES',`Buenos días, ${staffFirstName} 👋`],reception:['ATENCIÓN AL VIAJERO','Recepción'],departures:['PLANIFICACIÓN','Salidas programadas'],packages:['CATÁLOGO','Paquetes turísticos'],carousel:['PORTADA DEL SITIO','Carrusel del home'],equipment:['INVENTARIO','Equipamiento'],lodgings:['HOSPEDAJE','Hospedajes'],branches:['ADMINISTRACIÓN','Sucursales'],team:['ADMINISTRACIÓN','Personal']};
+const titles={dashboard:['CENTRO DE OPERACIONES',`Buenos días, ${staffFirstName} 👋`],reception:['ATENCIÓN AL VIAJERO','Recepción'],departures:['PLANIFICACIÓN','Salidas programadas'],packages:['CATÁLOGO','Paquetes turísticos'],carousel:['PORTADA DEL SITIO','Carrusel del home'],equipment:['INVENTARIO','Equipamiento'],lodgings:['HOSPEDAJE','Hospedajes'],branches:['ADMINISTRACIÓN','Sucursales'],team:['ADMINISTRACIÓN','Personal'],profile:['CUENTA DE ADMINISTRACIÓN','Mi perfil']};
 function switchView(name){
   const defaultView=window.Incaland?.defaultView||'dashboard';
   if(!document.getElementById(`view-${name}`))name=defaultView;
@@ -88,6 +90,19 @@ document.querySelector('[data-logout-form]')?.addEventListener('submit',async ev
     button.disabled=false;
     form.submit();
   }
+});
+
+document.getElementById('profileForm')?.addEventListener('submit',async event=>{
+  event.preventDefault();
+  const form=event.currentTarget,button=form.querySelector('[data-profile-submit]');
+  const data=Object.fromEntries(new FormData(form));
+  button.disabled=true;const old=button.textContent;button.textContent='Guardando...';
+  try{
+    const result=await api(appUrl('/perfil'),'PUT',data);
+    showToast(result.message);
+    form.elements.current_password.value='';form.elements.password.value='';form.elements.password_confirmation.value='';
+    setTimeout(()=>location.reload(),900);
+  }catch(error){showToast(error.message,true);button.disabled=false;button.textContent=old}
 });
 
 // Search and departure filtering
@@ -148,7 +163,7 @@ const resourceConfig={
   packages:{title:'Nuevo paquete turístico',fields:()=>field('name','Nombre')+field('tour_category_id','Categoría','select',`<option value="">Seleccionar</option>${[...new Map(window.Incaland.packages.map(p=>[p.tour_category_id,{id:p.tour_category_id,name:p.category_name}])).values()].map(c=>`<option value="${Number(c.id)}">${escapeHtml(c.name)}</option>`).join('')}`)+field('location','Destino')+field('duration_days','Duración (días)','number')+field('price','Precio (Bs)','number')+'<label class="span-2">Descripción<textarea name="description"></textarea></label>'+field('image','Imagen','file')},
   equipment:{title:'Registrar equipamiento',fields:()=>field('name','Nombre')+field('category','Tipo')+field('size','Tallas')+field('stock','Cantidad','number')+field('condition','Estado','select','<option>Excelente</option><option>Bueno</option><option>Mantenimiento</option>')+field('image','Imagen','file')},
   lodgings:{title:'Nuevo hospedaje',fields:()=>field('name','Nombre')+field('city','Ciudad')+field('address','Dirección')+field('rooms','Habitaciones','number')+field('available_rooms','Disponibles','number')+field('image','Imagen','file')},
-  employees:{title:'Nuevo empleado',fields:()=>field('full_name','Nombre completo')+field('email','Correo','email')+field('phone','Teléfono')+field('password','Contraseña temporal','password')+field('role','Rol','select','<option value="receptionist">Recepcionista</option><option value="admin">Administrador</option>')+field('branch_id','Sucursal','select',`<option value="">Seleccionar</option>${window.Incaland.branches.map(b=>`<option value="${Number(b.id)}">${escapeHtml(b.name)}</option>`).join('')}`)}
+  employees:{title:'Nuevo empleado',fields:()=>field('full_name','Nombre completo')+field('username','Nombre de usuario')+field('email','Correo','email')+field('phone','Teléfono')+field('password','Contraseña temporal','password')+field('role','Rol','select','<option value="receptionist">Recepcionista</option><option value="admin">Administrador</option>')+field('branch_id','Sucursal','select',`<option value="">Seleccionar</option>${window.Incaland.branches.map(b=>`<option value="${Number(b.id)}">${escapeHtml(b.name)}</option>`).join('')}`)}
   ,slides:{title:'Nueva diapositiva',fields:()=>field('title','Título')+'<label class="span-2">Subtítulo<textarea name="subtitle" maxlength="280" placeholder="Texto breve que acompaña al título"></textarea></label>'+field('display_order','Orden','number')+field('active','Visibilidad','select','<option value="1">Visible</option><option value="0">Oculta</option>')+'<label class="span-2">Imagen <small>JPG, PNG o WebP · máximo 8 MB</small><input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>'}
 };
 const collectionFor=type=>({branches:'branches',categories:'categories',packages:'packages',equipment:'equipment',lodgings:'lodgings',employees:'employees',slides:'slides'}[type]);

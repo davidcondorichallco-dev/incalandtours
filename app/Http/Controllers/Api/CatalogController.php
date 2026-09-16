@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class CatalogController extends Controller
 {
@@ -55,7 +56,7 @@ class CatalogController extends Controller
 
     public function update(Request $request, string $type, int $id)
     {
-        $config = $this->config($type, true);
+        $config = $this->config($type, true, $id);
         if (!$config) return response()->json(['ok'=>false, 'message'=>'Recurso no encontrado.'], 404);
         if (!DB::table($config['table'])->where('id', $id)->exists()) {
             return response()->json(['ok'=>false, 'message'=>'Registro no encontrado.'], 404);
@@ -129,7 +130,7 @@ class CatalogController extends Controller
             'packages' => DB::table('tour_packages as p')->join('tour_categories as c', 'c.id', '=', 'p.tour_category_id')->select('p.*','c.name as category_name','c.color as category_color'),
             'equipment' => DB::table('equipment'),
             'lodgings' => DB::table('lodgings'),
-            'employees' => DB::table('employees as e')->leftJoin('branches as b', 'b.id', '=', 'e.branch_id')->select('e.id','e.branch_id','e.full_name','e.email','e.phone','e.role','e.active','e.created_at','e.updated_at','b.name as branch_name'),
+            'employees' => DB::table('employees as e')->leftJoin('branches as b', 'b.id', '=', 'e.branch_id')->select('e.id','e.branch_id','e.full_name','e.username','e.email','e.phone','e.role','e.active','e.created_at','e.updated_at','b.name as branch_name'),
             'slides' => DB::table('home_slides')->orderBy('display_order')->orderBy('id'),
         };
 
@@ -140,7 +141,7 @@ class CatalogController extends Controller
         });
     }
 
-    private function config(string $type, bool $updating = false): ?array
+    private function config(string $type, bool $updating = false, ?int $id = null): ?array
     {
         return [
             'branches'=>['table'=>'branches','rules'=>['name'=>'required|string|max:150','city'=>'required|string|max:100','address'=>'required|string|max:200','phone'=>'nullable|string|max:40'],'extra'=>['qr_token'=>Str::uuid(),'active'=>true]],
@@ -148,7 +149,7 @@ class CatalogController extends Controller
             'packages'=>['table'=>'tour_packages','rules'=>['name'=>'required|string|max:150','tour_category_id'=>'required|exists:tour_categories,id','location'=>'required|string|max:150','duration_days'=>'required|integer|min:1|max:255','price'=>'required|numeric|min:0','description'=>'nullable|string','image'=>'nullable|image|mimes:jpg,jpeg,png,webp|max:8192'],'extra'=>['active'=>true]],
             'equipment'=>['table'=>'equipment','rules'=>['name'=>'required|string|max:150','category'=>'required|string|max:100','size'=>'nullable|string|max:100','stock'=>'required|integer|min:0','condition'=>'nullable|string|max:100','image'=>'nullable|image|mimes:jpg,jpeg,png,webp|max:8192'],'extra'=>[]],
             'lodgings'=>['table'=>'lodgings','rules'=>['name'=>'required|string|max:150','city'=>'required|string|max:100','address'=>'required|string|max:200','rooms'=>'required|integer|min:0','available_rooms'=>'required|integer|min:0','image'=>'nullable|image|mimes:jpg,jpeg,png,webp|max:8192'],'extra'=>['active'=>true]],
-            'employees'=>['table'=>'employees','rules'=>['full_name'=>'required|string|max:150','email'=>'required|email|max:150','phone'=>'nullable|string|max:40','role'=>'required|in:admin,receptionist','branch_id'=>'required|exists:branches,id','password'=>$updating?'nullable|string|min:8':'required|string|min:8'],'extra'=>['active'=>true]],
+            'employees'=>['table'=>'employees','rules'=>['full_name'=>'required|string|max:150','username'=>['required','string','min:3','max:60','regex:/^[A-Za-z0-9._-]+$/',Rule::unique('employees','username')->ignore($id)],'email'=>['required','email','max:150',Rule::unique('employees','email')->ignore($id)],'phone'=>'nullable|string|max:40','role'=>'required|in:admin,receptionist','branch_id'=>'required|exists:branches,id','password'=>$updating?'nullable|string|min:8':'required|string|min:8'],'extra'=>['active'=>true]],
             'slides'=>['table'=>'home_slides','rules'=>['title'=>'required|string|max:140','subtitle'=>'nullable|string|max:280','display_order'=>'required|integer|min:0|max:999','active'=>'required|boolean','image'=>$updating?'nullable|image|mimes:jpg,jpeg,png,webp|max:8192':'required|image|mimes:jpg,jpeg,png,webp|max:8192'],'extra'=>[]],
         ][$type] ?? null;
     }

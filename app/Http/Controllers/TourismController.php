@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class TourismController extends Controller
 {
@@ -162,7 +163,7 @@ class TourismController extends Controller
 
     public function updateResource(Request $request, string $type, int $id)
     {
-        $map = $this->resourceMap(true);
+        $map = $this->resourceMap(true, $id);
         abort_unless(isset($map[$type]),404);
         $config = $map[$type];
         abort_unless(DB::table($config['table'])->where('id',$id)->exists(),404);
@@ -194,7 +195,7 @@ class TourismController extends Controller
         return response()->json(['ok'=>true, 'message'=>'Diapositiva eliminada correctamente.']);
     }
 
-    private function resourceMap(bool $updating = false): array
+    private function resourceMap(bool $updating = false, ?int $id = null): array
     {
         return [
             'branches'=>['table'=>'branches','rules'=>['name'=>'required|string','city'=>'required|string','address'=>'required|string','phone'=>'nullable|string'],'extra'=>['qr_token'=>Str::uuid(),'active'=>true]],
@@ -202,7 +203,7 @@ class TourismController extends Controller
             'packages'=>['table'=>'tour_packages','rules'=>['name'=>'required|string','tour_category_id'=>'required|exists:tour_categories,id','location'=>'required|string','duration_days'=>'required|integer|min:1','price'=>'required|numeric|min:0','description'=>'nullable|string','image'=>'nullable|image|max:5120'],'extra'=>['active'=>true]],
             'equipment'=>['table'=>'equipment','rules'=>['name'=>'required|string','category'=>'required|string','size'=>'nullable|string','stock'=>'required|integer|min:0','condition'=>'nullable|string','image'=>'nullable|image|max:5120'],'extra'=>[]],
             'lodgings'=>['table'=>'lodgings','rules'=>['name'=>'required|string','city'=>'required|string','address'=>'required|string','rooms'=>'required|integer|min:0','available_rooms'=>'required|integer|min:0','image'=>'nullable|image|max:5120'],'extra'=>['active'=>true]],
-            'employees'=>['table'=>'employees','rules'=>['full_name'=>'required|string','email'=>'required|email','phone'=>'nullable|string','role'=>'required|in:admin,receptionist','branch_id'=>'required|exists:branches,id','password'=>$updating?'nullable|string|min:8':'required|string|min:8'],'extra'=>['active'=>true]],
+            'employees'=>['table'=>'employees','rules'=>['full_name'=>'required|string','username'=>['required','string','min:3','max:60','regex:/^[A-Za-z0-9._-]+$/',Rule::unique('employees','username')->ignore($id)],'email'=>['required','email',Rule::unique('employees','email')->ignore($id)],'phone'=>'nullable|string','role'=>'required|in:admin,receptionist','branch_id'=>'required|exists:branches,id','password'=>$updating?'nullable|string|min:8':'required|string|min:8'],'extra'=>['active'=>true]],
             'slides'=>['table'=>'home_slides','rules'=>['title'=>'required|string|max:140','subtitle'=>'nullable|string|max:280','display_order'=>'required|integer|min:0|max:999','active'=>'required|boolean','image'=>$updating?'nullable|image|max:8192':'required|image|max:8192'],'extra'=>[]],
         ];
     }

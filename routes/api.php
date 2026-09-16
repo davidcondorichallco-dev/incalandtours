@@ -6,8 +6,6 @@ use App\Http\Controllers\Api\OperationsController;
 use App\Http\Controllers\Api\PublicController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/documentacion', fn () => response(view('api-docs'))->header('X-Robots-Tag', 'noindex, nofollow'))->name('api.docs');
-
 Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 

@@ -10,6 +10,7 @@
 <body class="traveler-page">
 <div class="traveler-visual"><img src="{{ asset('images/bolivia-hero.png') }}" alt="Paisaje del Salar de Uyuni"><div></div><a class="brand public-brand" href="{{ route('home') }}"><span class="brand-mark"><span></span></span><span><strong>INCALAND</strong><small>TOURS · BOLIVIA</small></span></a><div class="visual-copy"><span>VIAJA · DESCUBRE · RECUERDA</span><h1 data-t="hero">Tu aventura<br>comienza aquí.</h1><p data-t="hero_sub">Cuéntanos un poco sobre ti y nosotros nos encargamos del resto.</p></div><small class="visual-foot">LA PAZ · UYUNI · SAJAMA · BOLIVIA</small></div>
 <main class="traveler-form-wrap">
+    <a href="{{ route('home') }}" class="form-home-link">← Volver al inicio</a>
     <div class="language-switch"><i data-icon="globe"></i><select id="languageSelect" aria-label="Idioma"><option value="es">Español</option><option value="en">English</option><option value="fr">Français</option><option value="pt">Português</option></select></div>
     <div class="form-intro"><span class="step-mark">{{ $online ? 'RESERVA ONLINE' : 'REGISTRO EN SUCURSAL' }}</span><h2 data-t="title">Datos del viajero</h2><p data-t="intro">Necesitamos esta información para preparar tu experiencia de forma segura y personalizada.</p>@if($branch)<div class="branch-label"><i data-icon="store"></i><span><small>SUCURSAL</small><strong>{{ $branch->name }} · {{ $branch->city }}</strong></span></div>@endif</div>
     <form id="touristForm" class="traveler-form">
